@@ -29,3 +29,13 @@ Only use real feed URLs confirmed from the publisher's official site and check i
 - Review and approval are explicit editorial steps.
 - Feed availability, rate limits, D1 limits, and Worker free-plan quotas apply.
 - Do not expose `ADMIN_TOKEN` in browser code.
+
+## Deploy from GitHub Actions (manual)
+1. In GitHub repository Settings → Secrets and variables → Actions, add:
+   - `CLOUDFLARE_API_TOKEN`: a Cloudflare API token scoped only to this account with Workers Scripts Edit and D1 Edit permissions needed for deployment.
+   - `CLOUDFLARE_ACCOUNT_ID`: the account identifier shown in the Cloudflare dashboard.
+2. Open Actions → **DAHLEEZ Deploy to Cloudflare** → Run workflow.
+3. After deployment, enable the Worker `dahlez-newsroom` workers.dev subdomain in Cloudflare if it is not enabled.
+4. Add `ADMIN_TOKEN` as a Worker secret before using `/admin.html`.
+
+Do not paste tokens into chat or commit them to Git. Deployment is manual and will not start until both repository secrets exist.
