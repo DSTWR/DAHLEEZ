@@ -1,6 +1,6 @@
 name = "dahleez-newsroom"
 main = "src/worker.js"
-compatibility_date = "2026-11-27"
+compatibility_date = "2026-11-26"
 
 [triggers]
 crons = ["*/15 * * * *"]
