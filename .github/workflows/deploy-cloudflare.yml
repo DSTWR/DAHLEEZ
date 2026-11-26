@@ -37,7 +37,7 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           wrangler --version
-          wrangler deploy --dry-run --log-level debug
+          wrangler deploy --dry-run
 
       - name: Deploy Worker and static website with diagnostic output
         working-directory: backend
@@ -46,4 +46,4 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           set -o pipefail
-          wrangler deploy --log-level debug 2>&1 | tee ../wrangler-deploy.log
+          wrangler deploy 2>&1 | tee ../wrangler-deploy.log
