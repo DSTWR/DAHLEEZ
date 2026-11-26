@@ -6,9 +6,17 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
 
       - name: Verify deployment files
         working-directory: backend
@@ -21,20 +29,23 @@ jobs:
           test -d ../assets
           echo "Deployment source files verified."
 
-      - name: Validate Worker bundle
-        uses: cloudflare/wrangler-action@v4
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          workingDirectory: backend
-          wranglerVersion: "4"
-          command: deploy --dry-run
+      - name: Install pinned Wrangler
+        run: npm install --global wrangler@4
 
-      - name: Deploy Worker and static website
-        uses: cloudflare/wrangler-action@v4
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          workingDirectory: backend
-          wranglerVersion: "4"
-          command: deploy
+      - name: Validate Worker bundle
+        working-directory: backend
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          wrangler --version
+          wrangler deploy --dry-run --log-level debug
+
+      - name: Deploy Worker and static website with diagnostic output
+        working-directory: backend
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -o pipefail
+          wrangler deploy --log-level debug 2>&1 | tee ../wrangler-deploy.log
