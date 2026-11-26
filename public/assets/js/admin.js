@@ -3,7 +3,7 @@ let adminToken='';
 const headers=()=>({authorization:'Bearer '+adminToken,'content-type':'application/json'});
 function status(s){statusEl.textContent=s}
 async function request(path,options={}){
-  if(!/^[\\x21-\\x7E]+$/.test(adminToken)){
+  if(!/^[\x21-\x7E]+$/.test(adminToken)){
     throw new Error('رمز الإدارة يحتوي أحرفاً غير صالحة. أعد نسخه كما هو من Cloudflare، وتأكد أن لوحة المفاتيح لا تضيف أحرفاً عربية أو مسافات.');
   }
   const r=await fetch(path,{...options,headers:{...headers(),...(options.headers||{})}});
@@ -43,7 +43,7 @@ async function decide(id,decision,button){
 document.getElementById('connect').addEventListener('click',()=>{
   adminToken=tokenInput.value.trim();
   if(!adminToken){status('أدخل رمز الإدارة.');return}
-  if(!/^[\\x21-\\x7E]+$/.test(adminToken)){status('رمز الإدارة يجب أن يحتوي أحرفاً إنجليزية وأرقاماً ورموزاً لاتينية فقط. أعد نسخه من Cloudflare.');return}
+  if(!/^[\x21-\x7E]+$/.test(adminToken)){status('رمز الإدارة يجب أن يحتوي أحرفاً إنجليزية وأرقاماً ورموزاً لاتينية فقط. أعد نسخه من Cloudflare.');return}
   load()
 });
 document.getElementById('refresh').addEventListener('click',load);
