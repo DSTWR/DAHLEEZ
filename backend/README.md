@@ -1,6 +1,6 @@
 # DAHLEEZ Newsroom API
 
-Starter backend for Cloudflare Workers + D1. This is not deployed yet.
+Starter backend for Cloudflare Workers + D1. The D1 database has been provisioned and its schema applied. The Worker itself is not deployed yet.
 
 ## What it does
 - Scheduled RSS/Atom polling every 15 minutes.
