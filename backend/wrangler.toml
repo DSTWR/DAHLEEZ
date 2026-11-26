@@ -15,5 +15,5 @@ database_id = "b7fdb505-ea84-494f-864d-d99d78f34687"
 SOURCES_JSON = "[]"
 
 [assets]
-directory = "../public"
+directory = ".."
 run_worker_first = ["/api/*"]
