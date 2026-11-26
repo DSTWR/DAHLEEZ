@@ -7,8 +7,31 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: cloudflare/wrangler-action@v3
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Verify deployment files
+        working-directory: backend
+        run: |
+          test -f src/worker.js
+          test -f wrangler.toml
+          test -f schema.sql
+          test -f ../index.html
+          test -f ../admin.html
+          test -d ../assets
+          echo "Deployment source files verified."
+
+      - name: Validate Worker bundle
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: backend
+          wranglerVersion: "4"
+          command: deploy --dry-run
+
+      - name: Deploy Worker and static website
+        uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
