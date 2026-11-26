@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" role="img" aria-labelledby="title desc">
+<title id="title">شعار دهليز</title><desc id="desc">بوابة هندسية تحتضن الكرة الأرضية</desc>
+<defs><linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f5d99a"/><stop offset=".55" stop-color="#c59a52"/><stop offset="1" stop-color="#8d642b"/></linearGradient></defs>
+<path d="M28 132V73a52 52 0 0 1 104 0v59h-15V73a37 37 0 0 0-74 0v59z" fill="none" stroke="url(#gold)" stroke-width="8"/>
+<circle cx="80" cy="78" r="29" fill="#10233d" stroke="url(#gold)" stroke-width="3"/>
+<path d="m65 58 10 4 5 10-7 8-1 13-10-7-4-13zm24 2 12 7-3 12-8 6-5-10zm-2 37 9-5 7 8-5 10-11-3z" fill="#d8b36d"/>
+<path d="M16 116c33 18 95 18 128-2" fill="none" stroke="url(#gold)" stroke-width="5" stroke-linecap="round"/>
+<path d="M20 139h120" stroke="#d8b36d" stroke-width="2" opacity=".7"/>
+</svg>
