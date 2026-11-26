@@ -1,41 +1,36 @@
 # DAHLEEZ Newsroom API
 
-Starter backend for Cloudflare Workers + D1. The D1 database has been provisioned and its schema applied. The Worker itself is not deployed yet.
+Cloudflare Workers + D1 newsroom backend for **دهليز | DAHLEEZ**.
 
-## What it does
-- Scheduled RSS/Atom polling every 15 minutes.
-- Deduplicates items by source and source item identifier.
-- Stores all new items as **pending**. Nothing is published automatically.
-- Exposes approved stories at `GET /api/stories`.
-- Protects review endpoints with `ADMIN_TOKEN`.
-- Records editor decisions in `audit_log`.
+## Live infrastructure
+- Worker: `dahleez-newsroom`
+- Public endpoint: https://dahleez-newsroom.dstwr.workers.dev
+- D1 database: `dahleez-newsroom`
+- Database schema: applied; tables `sources`, `stories`, and `audit_log` verified.
+- Scheduled ingestion: every 15 minutes.
+- Editor credential: `ADMIN_TOKEN` is stored as an encrypted Worker secret.
+- Static site: served from `public/` by Workers Static Assets.
+- Deployment: GitHub Actions on pushes to `main` that change `backend/**`, `public/**`, or the deployment workflow; manual dispatch remains available.
 
-## Required setup (not performed)
-1. Create a Cloudflare D1 database named `dahlez-newsroom`.
-2. Replace the placeholder `database_id` in `wrangler.toml`.
-3. Apply schema: `wrangler d1 execute dahlez-newsroom --file=schema.sql`.
-4. Configure `ADMIN_TOKEN` as a Worker secret, never in Git.
-5. Set `SOURCES_JSON` with a reviewed list of official RSS/Atom feeds and their permitted use.
-6. Deploy the Worker and test health, ingestion, review, and approval.
+## API
+- `GET /api/health`: service health.
+- `GET /api/stories?limit=20`: approved stories only.
+- `GET /api/admin/review`: pending stories; requires `Authorization: Bearer <ADMIN_TOKEN>`.
+- `POST /api/admin/decision`: approve or reject a pending story; requires the editor secret.
 
-Example source configuration:
-`[{"id":"publisher-id","name":"Publisher name","feed_url":"https://publisher.example/feed.xml","category":"world","enabled":true}]`
+## Editorial safety
+- New feed items are pending by default.
+- Nothing is published automatically.
+- RSS/Atom sources must be reviewed for authenticity and reuse terms before activation.
+- Do not republish publisher summaries or media unless the applicable terms or permission allow it. Prefer original editorial summaries with clear source attribution and links.
+- AI assistance may support research and drafting, but cannot establish truth or approve sensitive stories.
 
-Only use real feed URLs confirmed from the publisher's official site and check its reuse terms. The example domain is deliberately non-operational.
+## Remaining launch requirements
+1. Add approved official RSS/Atom feeds to `SOURCES_JSON` after their terms are reviewed.
+2. Test feed ingestion and editor review with real items.
+3. Configure a custom domain if desired.
+4. Complete privacy/contact pages and mobile QA.
+5. Approve any public launch explicitly.
 
-## Important limits
-- RSS feeds are not proof that a claim is true.
-- Ingestion does not rewrite, translate, summarize, or publish stories.
-- Review and approval are explicit editorial steps.
-- Feed availability, rate limits, D1 limits, and Worker free-plan quotas apply.
-- Do not expose `ADMIN_TOKEN` in browser code.
-
-## Deploy from GitHub Actions (manual)
-1. In GitHub repository Settings → Secrets and variables → Actions, add:
-   - `CLOUDFLARE_API_TOKEN`: a Cloudflare API token scoped only to this account with Workers Scripts Edit and D1 Edit permissions needed for deployment.
-   - `CLOUDFLARE_ACCOUNT_ID`: the account identifier shown in the Cloudflare dashboard.
-2. Open Actions → **DAHLEEZ Deploy to Cloudflare** → Run workflow.
-3. After deployment, enable the Worker `dahlez-newsroom` workers.dev subdomain in Cloudflare if it is not enabled.
-4. Add `ADMIN_TOKEN` as a Worker secret before using `/admin.html`.
-
-Do not paste tokens into chat or commit them to Git. Deployment is manual and will not start until both repository secrets exist.
+## GitHub Actions secrets
+The deployment workflow reads `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` from repository Actions secrets. Never put their values in Git or chat.
