@@ -1,0 +1,7 @@
+# Keep backend implementation and repository metadata out of public static assets
+backend/
+.github/
+.git/
+docs/
+README.md
+LICENSE*
