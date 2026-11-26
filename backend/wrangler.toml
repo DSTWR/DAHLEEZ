@@ -1,4 +1,4 @@
-name = "dahlez-newsroom"
+name = "dahleez-newsroom"
 main = "src/worker.js"
 compatibility_date = "2026-11-27"
 
@@ -7,7 +7,7 @@ crons = ["*/15 * * * *"]
 
 [[d1_databases]]
 binding = "DB"
-database_name = "dahlez-newsroom"
+database_name = "dahleez-newsroom"
 database_id = "b7fdb505-ea84-494f-864d-d99d78f34687"
 
 [vars]
