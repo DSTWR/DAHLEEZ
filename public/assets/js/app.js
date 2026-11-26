@@ -1,0 +1,10 @@
+const nav=document.getElementById('mainNav');
+document.getElementById('menuToggle').addEventListener('click',()=>nav.classList.toggle('open'));
+nav.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>nav.classList.remove('open')));
+const panel=document.getElementById('searchPanel');
+document.getElementById('searchToggle').addEventListener('click',()=>{panel.hidden=false;document.getElementById('searchInput').focus()});
+document.getElementById('searchClose').addEventListener('click',()=>{panel.hidden=true});
+document.getElementById('year').textContent=new Date().getFullYear();
+const date=new Intl.DateTimeFormat('ar',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).format(new Date());
+document.getElementById('todayDate').textContent=date;
+document.addEventListener('keydown',e=>{if(e.key==='Escape')panel.hidden=true});
