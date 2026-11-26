@@ -13,3 +13,7 @@ database_id = "REPLACE_WITH_D1_DATABASE_ID"
 [vars]
 # Configure SOURCES_JSON only after reviewing each publisher's official RSS terms.
 SOURCES_JSON = "[]"
+
+[assets]
+directory = "./public"
+run_worker_first = ["/api/*"]
