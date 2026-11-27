@@ -14,8 +14,17 @@ async function request(path,options={}){
 async function load(){
   if(!adminToken){status('أدخل رمز الإدارة أولاً.');return}
   status('جارٍ تحميل القائمة...');itemsEl.textContent='جارٍ التحميل...';
-  try{const data=await request('/api/admin/review');render(data.pending||[]);status('تم الاتصال. عدد المواد المعلّقة: '+(data.pending||[]).length)}
+  try{const data=await request('/api/admin/review');render(data.pending||[]);renderStats(data);status('تم الاتصال. عدد المواد المعلّقة: '+(data.pending||[]).length)}
   catch(e){itemsEl.textContent='تعذر تحميل القائمة.';status('فشل الاتصال: '+e.message)}
+}
+function renderStats(data){
+  const stats=document.getElementById('stats'); if(!stats)return;
+  const counts=Object.fromEntries((data.counts||[]).map(x=>[x.status,Number(x.total)||0]));
+  document.getElementById('pendingCount').textContent=counts.pending||0;
+  document.getElementById('approvedCount').textContent=counts.approved||0;
+  document.getElementById('rejectedCount').textContent=counts.rejected||0;
+  document.getElementById('sourcesCount').textContent=Number(data.sources?.enabled)||0;
+  stats.hidden=false;
 }
 function render(rows){
   itemsEl.replaceChildren();
@@ -46,7 +55,15 @@ document.getElementById('connect').addEventListener('click',()=>{
   if(!/^[\x21-\x7E]+$/.test(adminToken)){status('رمز الإدارة يجب أن يحتوي أحرفاً إنجليزية وأرقاماً ورموزاً لاتينية فقط. أعد نسخه من Cloudflare.');return}
   load()
 });
-document.getElementById('refresh').addEventListener('click',load);
+document.getElementById('refresh').addEventListener('click',async()=>{
+  if(!adminToken){status('أدخل رمز الإدارة أولاً.');return}
+  status('جارٍ جلب الأخبار من المصادر...');
+  try{
+    const result=await request('/api/admin/refresh',{method:'POST'});
+    await load();
+    status('اكتمل الفحص. مصادر ناجحة: '+result.fetched+'، أخبار جديدة: '+result.inserted+'، مصادر متعثرة: '+result.failed+'، المعلّق الآن: '+(await request('/api/admin/review')).pending.length);
+  }catch(e){status('تعذر تحديث المصادر: '+e.message)}
+});
 document.getElementById('clear').addEventListener('click',()=>{
   adminToken='';tokenInput.value='';itemsEl.textContent='تم مسح الرمز من ذاكرة الصفحة.';status('تم قطع الاتصال.')
 });

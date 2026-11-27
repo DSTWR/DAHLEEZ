@@ -54,9 +54,25 @@ export default {
       "access-control-allow-headers": "authorization,content-type" } });
     if (url.pathname === "/api/health") return json({ service: "DAHLEEZ newsroom", status: "online", mode: "starter", publishing: false });
     if (url.pathname === "/api/stories" && request.method === "GET") {
-      const limit = Math.min(50, Math.max(1, Number(url.searchParams.get("limit") || 20)));
-      const { results } = await env.DB.prepare("SELECT stories.id,stories.title,stories.summary,stories.category,stories.published_at,stories.source_url,sources.name AS source_name FROM stories JOIN sources ON sources.id=stories.source_id WHERE stories.status='approved' ORDER BY COALESCE(stories.published_at,stories.fetched_at) DESC LIMIT ?").bind(limit).all();
-      return json({ stories: results || [] });
+      const select = "SELECT stories.id,stories.title,stories.summary,stories.category,stories.published_at,stories.source_url,sources.name AS source_name FROM stories JOIN sources ON sources.id=stories.source_id WHERE stories.status='approved'";
+      const id = url.searchParams.get("id");
+      if (id) {
+        const story = await env.DB.prepare(select + " AND stories.id=? LIMIT 1").bind(id).first();
+        return story ? json({ story }) : json({ error: "Story not found" }, 404);
+      }
+      const requestedLimit = Number(url.searchParams.get("limit") || 9);
+      const requestedOffset = Number(url.searchParams.get("offset") || 0);
+      const limit = Number.isFinite(requestedLimit) ? Math.min(30, Math.max(1, Math.trunc(requestedLimit))) : 9;
+      const offset = Number.isFinite(requestedOffset) ? Math.max(0, Math.min(10000, Math.trunc(requestedOffset))) : 0;
+      const category = (url.searchParams.get("category") || "").slice(0, 40);
+      const query = (url.searchParams.get("q") || "").trim().slice(0, 120);
+      let sql = select, binds = [];
+      if (category) { sql += " AND stories.category=?"; binds.push(category); }
+      if (query) { sql += " AND (stories.title LIKE ? OR stories.summary LIKE ?)"; binds.push("%" + query + "%", "%" + query + "%"); }
+      sql += " ORDER BY COALESCE(stories.published_at,stories.fetched_at) DESC LIMIT ? OFFSET ?";
+      binds.push(limit, offset);
+      const { results } = await env.DB.prepare(sql).bind(...binds).all();
+      return json({ stories: results || [], limit, offset });
     }
     if (url.pathname === "/api/admin/refresh" && request.method === "POST") {
       if (!env.ADMIN_TOKEN || request.headers.get("authorization") !== "Bearer " + env.ADMIN_TOKEN) return json({ error: "Unauthorized" }, 401);
@@ -67,7 +83,9 @@ export default {
     if (url.pathname === "/api/admin/review" && request.method === "GET") {
       if (!env.ADMIN_TOKEN || request.headers.get("authorization") !== "Bearer " + env.ADMIN_TOKEN) return json({ error: "Unauthorized" }, 401);
       const { results } = await env.DB.prepare("SELECT stories.*,sources.name AS source_name FROM stories JOIN sources ON sources.id=stories.source_id WHERE stories.status='pending' ORDER BY stories.fetched_at DESC LIMIT 100").all();
-      return json({ pending: results || [] });
+      const counts = await env.DB.prepare("SELECT status,COUNT(*) AS total FROM stories GROUP BY status").all();
+      const sources = await env.DB.prepare("SELECT COUNT(*) AS total,COALESCE(SUM(enabled),0) AS enabled FROM sources").first();
+      return json({ pending: results || [], counts: counts.results || [], sources: sources || { total: 0, enabled: 0 } });
     }
     if (url.pathname === "/api/admin/decision" && request.method === "POST") {
       if (!env.ADMIN_TOKEN || request.headers.get("authorization") !== "Bearer " + env.ADMIN_TOKEN) return json({ error: "Unauthorized" }, 401);

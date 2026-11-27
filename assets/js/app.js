@@ -1,32 +1,13 @@
-const nav=document.getElementById('mainNav');
-document.getElementById('menuToggle').addEventListener('click',()=>nav.classList.toggle('open'));
-nav.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>nav.classList.remove('open')));
-const panel=document.getElementById('searchPanel');
-document.getElementById('searchToggle').addEventListener('click',()=>{panel.hidden=false;document.getElementById('searchInput').focus()});
-document.getElementById('searchClose').addEventListener('click',()=>{panel.hidden=true});
-document.getElementById('year').textContent=new Date().getFullYear();
-const date=new Intl.DateTimeFormat('ar',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).format(new Date());
-document.getElementById('todayDate').textContent=date;
-document.addEventListener('keydown',e=>{if(e.key==='Escape')panel.hidden=true});
-async function loadApprovedStories(){
- const target=document.getElementById('liveStories'); if(!target)return;
- try{
-  const response=await fetch('/api/stories?limit=8',{headers:{accept:'application/json'}});
-  if(!response.ok)return;
-  const data=await response.json(); const stories=Array.isArray(data.stories)?data.stories:[];
-  if(!stories.length)return;
-  target.hidden=false; target.replaceChildren();
-  const heading=document.createElement('h2'); heading.textContent='آخر الأخبار المعتمدة'; target.append(heading);
-  const grid=document.createElement('div'); grid.className='live-grid';
-  for(const story of stories){
-   const card=document.createElement('article'); card.className='live-card';
-   const category=document.createElement('span'); category.className='category'; category.textContent=story.category||'أخبار';
-   const title=document.createElement('h3'); title.textContent=story.title;
-   const summary=document.createElement('p'); summary.textContent=story.summary||'';
-   const source=document.createElement('a'); source.href=story.source_url; source.target='_blank'; source.rel='noopener noreferrer'; source.textContent='المصدر: '+(story.source_name||'المصدر الأصلي');
-   card.append(category,title,summary,source); grid.append(card);
-  }
-  target.append(grid);
- }catch(_){/* API is optional until the newsroom backend is deployed. */}
-}
-loadApprovedStories();
+const $=id=>document.getElementById(id),nav=$('mainNav'),panel=$('searchPanel'),grid=$('liveStories'),state=$('feedState'),more=$('loadMore');
+const params=new URLSearchParams(location.search);let category=params.get('category')||'',query=params.get('q')||'',offset=0,loading=false,hasMore=true;
+const labels={world:'العالم',business:'اقتصاد',technology:'تقنية',science:'علوم',sports:'رياضة',culture:'ثقافة',local:'محليات'};
+$('menuToggle').addEventListener('click',()=>nav.classList.toggle('open'));nav.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>nav.classList.remove('open')));
+$('searchToggle').addEventListener('click',()=>{panel.hidden=false;$('searchInput').value=query;$('searchInput').focus()});$('searchClose').addEventListener('click',()=>panel.hidden=true);panel.addEventListener('click',e=>{if(e.target===panel)panel.hidden=true});document.addEventListener('keydown',e=>{if(e.key==='Escape')panel.hidden=true});
+$('year').textContent=new Date().getFullYear();$('todayDate').textContent=new Intl.DateTimeFormat('ar',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).format(new Date());
+function filters(){document.querySelectorAll('.filter-chip').forEach(a=>a.classList.toggle('active',(a.dataset.category||'')===category));$('feedHeading').textContent=category?'أخبار '+(labels[category]||category):query?'نتائج البحث':'آخر الأخبار المعتمدة';$('feedDescription').textContent=query?'نتائج مطابقة لعبارة: '+query:'المواد التي راجعها فريق التحرير وأجاز نشرها'}
+function card(s){const c=document.createElement('article');c.className='live-card';const b=document.createElement('div');b.className='card-content';const m=document.createElement('div');m.className='card-meta';const cat=document.createElement('span');cat.textContent=labels[s.category]||s.category||'أخبار';const t=document.createElement('time');t.textContent=s.published_at||'وقت النشر غير محدد';m.append(cat,t);const h=document.createElement('h3');h.textContent=s.title||'خبر';const p=document.createElement('p');p.textContent=s.summary||'تابع تفاصيل الخبر ومصدره الأصلي.';const foot=document.createElement('div');foot.className='card-footer';const source=document.createElement('span');source.className='card-source';source.textContent=s.source_name||'مصدر الخبر';const a=document.createElement('a');a.href='story.html?id='+encodeURIComponent(s.id);a.textContent='اقرأ التفاصيل ←';foot.append(source,a);b.append(m,h,p,foot);c.append(b);return c}
+async function fetchStories(reset=false){if(loading||(!hasMore&&!reset))return;loading=true;if(reset){offset=0;hasMore=true;grid.replaceChildren();more.hidden=true;state.hidden=false;state.className='feed-state';state.textContent='جارٍ تحميل الأخبار المعتمدة...'}try{const q=new URLSearchParams({limit:'9',offset:String(offset)});if(category)q.set('category',category);if(query)q.set('q',query);const r=await fetch('/api/stories?'+q,{headers:{accept:'application/json'},cache:'no-store'});if(!r.ok)throw Error();const d=await r.json(),rows=Array.isArray(d.stories)?d.stories:[];if(reset)state.hidden=true;if(!rows.length&&offset===0){state.hidden=false;state.textContent=query?'لا توجد نتائج مطابقة. جرّب عبارة أخرى.':'لا توجد أخبار معتمدة في هذا القسم حالياً.';hasMore=false;return}rows.forEach(s=>grid.append(card(s)));offset+=rows.length;hasMore=rows.length===9;more.hidden=!hasMore}catch(e){state.hidden=false;state.className='feed-state error';state.textContent='تعذر تحميل الأخبار حالياً. تحقق من الاتصال ثم أعد المحاولة.'}finally{loading=false}}
+document.querySelectorAll('.filter-chip').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();category=a.dataset.category||'';query='';history.pushState({},'',category?'?category='+encodeURIComponent(category):location.pathname);filters();fetchStories(true)}));
+$('searchForm').addEventListener('submit',e=>{e.preventDefault();query=$('searchInput').value.trim();category='';history.pushState({},'',query?'?q='+encodeURIComponent(query):location.pathname);panel.hidden=true;filters();fetchStories(true)});
+$('refreshStories').addEventListener('click',()=>fetchStories(true));more.addEventListener('click',()=>fetchStories(false));window.addEventListener('popstate',()=>{const p=new URLSearchParams(location.search);category=p.get('category')||'';query=p.get('q')||'';filters();fetchStories(true)});
+filters();fetchStories(true);setInterval(()=>{if(!document.hidden&&!query&&!category)fetchStories(true)},300000);

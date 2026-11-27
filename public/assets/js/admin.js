@@ -14,8 +14,17 @@ async function request(path,options={}){
 async function load(){
   if(!adminToken){status('أدخل رمز الإدارة أولاً.');return}
   status('جارٍ تحميل القائمة...');itemsEl.textContent='جارٍ التحميل...';
-  try{const data=await request('/api/admin/review');render(data.pending||[]);status('تم الاتصال. عدد المواد المعلّقة: '+(data.pending||[]).length)}
+  try{const data=await request('/api/admin/review');render(data.pending||[]);renderStats(data);status('تم الاتصال. عدد المواد المعلّقة: '+(data.pending||[]).length)}
   catch(e){itemsEl.textContent='تعذر تحميل القائمة.';status('فشل الاتصال: '+e.message)}
+}
+function renderStats(data){
+  const stats=document.getElementById('stats'); if(!stats)return;
+  const counts=Object.fromEntries((data.counts||[]).map(x=>[x.status,Number(x.total)||0]));
+  document.getElementById('pendingCount').textContent=counts.pending||0;
+  document.getElementById('approvedCount').textContent=counts.approved||0;
+  document.getElementById('rejectedCount').textContent=counts.rejected||0;
+  document.getElementById('sourcesCount').textContent=Number(data.sources?.enabled)||0;
+  stats.hidden=false;
 }
 function render(rows){
   itemsEl.replaceChildren();
