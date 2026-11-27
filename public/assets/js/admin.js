@@ -67,3 +67,15 @@ document.getElementById('refresh').addEventListener('click',async()=>{
 document.getElementById('clear').addEventListener('click',()=>{
   adminToken='';tokenInput.value='';itemsEl.textContent='تم مسح الرمز من ذاكرة الصفحة.';status('تم قطع الاتصال.')
 });
+
+async function refreshFeeds(){
+  if(!adminToken){status('اتصل بغرفة الأخبار أولاً.');return}
+  const button=document.getElementById('refreshFeeds'); if(button)button.disabled=true;
+  status('جارٍ فحص مصادر الأخبار وجلب المواد الجديدة...');
+  try{
+    const result=await request('/api/admin/refresh',{method:'POST',body:JSON.stringify({})});
+    await load();
+    status('اكتمل الفحص. مصادر ناجحة: '+(result.fetched||0)+'، أخبار جديدة: '+(result.inserted||0)+'، مصادر متعثرة: '+(result.failed||0)+'.');
+  }catch(e){status('تعذر فحص المصادر: '+e.message)}
+  finally{if(button)button.disabled=false}
+}
