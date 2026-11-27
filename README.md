@@ -16,9 +16,9 @@
 - الموقع الثابت: Cloudflare Workers Static Assets من مجلد public/.
 - الخلفية: Cloudflare Worker في backend/src/worker.js.
 - قاعدة البيانات: Cloudflare D1، مربوطة بالاسم DB.
-- جمع الأخبار: RSS عبر مهمة مجدولة، ومصادرها تبقى معطلة حتى اعتمادها.
+- جمع الأخبار: ثلاثة مصادر RSS عربية مهيأة مع تشغيل مجدول كل 15 دقيقة.
 - التحرير: لوحة داخلية على /admin.html مع رمز ADMIN_TOKEN.
-- النشر: لا يظهر سوى approved في واجهة الأخبار وواجهة API.
+- النشر: لا يظهر سوى approved في واجهة الأخبار وواجهة API. كل مادة مستوردة تبدأ pending.
 - CI/CD: GitHub Actions للتحقق والنشر إلى Cloudflare.
 
 ## صفحات ووظائف الموقع
