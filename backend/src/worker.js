@@ -58,6 +58,12 @@ export default {
       const { results } = await env.DB.prepare("SELECT stories.id,stories.title,stories.summary,stories.category,stories.published_at,stories.source_url,sources.name AS source_name FROM stories JOIN sources ON sources.id=stories.source_id WHERE stories.status='approved' ORDER BY COALESCE(stories.published_at,stories.fetched_at) DESC LIMIT ?").bind(limit).all();
       return json({ stories: results || [] });
     }
+    if (url.pathname === "/api/admin/refresh" && request.method === "POST") {
+      if (!env.ADMIN_TOKEN || request.headers.get("authorization") !== "Bearer " + env.ADMIN_TOKEN) return json({ error: "Unauthorized" }, 401);
+      const result = await ingest(env);
+      if (result.error) return json(result, 500);
+      return json({ ok: true, ...result });
+    }
     if (url.pathname === "/api/admin/review" && request.method === "GET") {
       if (!env.ADMIN_TOKEN || request.headers.get("authorization") !== "Bearer " + env.ADMIN_TOKEN) return json({ error: "Unauthorized" }, 401);
       const { results } = await env.DB.prepare("SELECT stories.*,sources.name AS source_name FROM stories JOIN sources ON sources.id=stories.source_id WHERE stories.status='pending' ORDER BY stories.fetched_at DESC LIMIT 100").all();
